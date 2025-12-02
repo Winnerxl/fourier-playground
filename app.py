@@ -321,6 +321,20 @@ if st.session_state.original_image is not None:
         safe_image = Image.open(buf)
         # ------------------------------
 
+        # DEBUG BLOĞU: Spektrum gerçekten oluşuyor mu, direkt göster
+        # (İstersen deploy sonrası sorun çözülünce bu kısmı silebilirsin.)
+        with st.expander("Fourier Spektrumu (debug görüntü)", expanded=False):
+            st.image(
+                safe_image,
+                caption="Fourier Spektrumu (debug)",
+                use_column_width=True,
+            )
+            st.write(
+                "Spektrum istatistikleri (min, max): ",
+                float(current_magnitude.min()),
+                float(current_magnitude.max()),
+            )
+
         # Drawable canvas (background_image olarak 'safe_image' kullanıyoruz)
         canvas_result = st_canvas(
             fill_color="rgba(0, 0, 0, 0)",
