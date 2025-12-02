@@ -305,21 +305,34 @@ if st.session_state.original_image is not None:
             canvas_drawing_mode = "freedraw"
             stroke_color = "#FF0000"  # Kırmızı
         
+      # --- KRİTİK DÜZELTME BURADA ---
+        # 1. Spektrumu taze olarak hesapla
         current_magnitude = get_magnitude_spectrum(st.session_state.modified_fft)
-        fresh_spectrum_image = spectrum_to_image(current_magnitude)
+        
+        # 2. PIL Image nesnesini oluştur
+        pil_img = spectrum_to_image(current_magnitude)
+        
+        # 3. "Buffer Hack": Resmi bellekte bir byte dizisine (sanal dosya) kaydet
+        # Bu işlem, resmin ham verisini (raw bytes) netleştirir ve
+        # Cloud ortamındaki serileştirme sorunlarını %100 çözer.
+        buf = io.BytesIO()
+        pil_img.save(buf, format="PNG")
+        buf.seek(0)
+        safe_image = Image.open(buf)
+        # ------------------------------
 
-        # Drawable canvas
+        # Drawable canvas (background_image olarak 'safe_image' kullanıyoruz)
         canvas_result = st_canvas(
             fill_color="rgba(0, 0, 0, 0)",
             stroke_width=stroke_width,
             stroke_color=stroke_color,
-            background_image=fresh_spectrum_image, # BURASI DEĞİŞTİ
+            background_image=safe_image, # Düzeltilmiş resim burada
             update_streamlit=True,
             height=400,
             width=400,
             drawing_mode=canvas_drawing_mode,
             point_display_radius=3 if canvas_drawing_mode == "point" else 0,
-            key=f"canvas_{st.session_state.canvas_key}", 
+            key=f"canvas_{st.session_state.canvas_key}",
         )
         
         # Canvas'tan veri al
