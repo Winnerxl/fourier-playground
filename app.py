@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from PIL import Image
 import io
+import base64
 from streamlit_drawable_canvas import st_canvas
 
 # Sayfa yapılandırması
@@ -34,6 +35,7 @@ if 'original_image' not in st.session_state:
     st.session_state.mask = None
     st.session_state.selected_point = None
     st.session_state.spectrum_image = None
+    st.session_state.canvas_key = 0  # Canvas'ı sıfırlamak için
 
 def make_square(img):
     """Resmi kare yapar"""
@@ -64,24 +66,17 @@ def apply_mask_and_reconstruct(fft_shift, mask):
     return img_back, masked_fft
 
 def spectrum_to_image(magnitude_spectrum):
-    """Spektrumu PIL Image'e çevirir"""
+    """Spektrumu PIL Image'e çevirir ve kaydet"""
     # Normalize et
     normalized = (magnitude_spectrum - magnitude_spectrum.min()) / \
                  (magnitude_spectrum.max() - magnitude_spectrum.min())
     normalized = (normalized * 255).astype(np.uint8)
     
-    # Grayscale olarak göster
-    fig, ax = plt.subplots(figsize=(6, 6), dpi=100)
-    ax.imshow(normalized, cmap='gray')
-    ax.axis('off')
-    plt.tight_layout(pad=0)
+    # PIL Image oluştur
+    img = Image.fromarray(normalized).convert('RGB')
     
-    # Figure'u image'e çevir
-    buf = io.BytesIO()
-    plt.savefig(buf, format='png', bbox_inches='tight', pad_inches=0)
-    buf.seek(0)
-    img = Image.open(buf)
-    plt.close()
+    # Resize et (canvas boyutuna)
+    img = img.resize((400, 400), Image.Resampling.LANCZOS)
     
     return img
 
@@ -257,6 +252,7 @@ with st.sidebar:
             st.session_state.selected_point = None
             magnitude_spectrum = get_magnitude_spectrum(st.session_state.fft_shift)
             st.session_state.spectrum_image = spectrum_to_image(magnitude_spectrum)
+            st.session_state.canvas_key += 1  # Canvas'ı sıfırlamak için key'i değiştir
             st.rerun()
         
         st.markdown("---")
@@ -318,7 +314,7 @@ if st.session_state.original_image is not None:
             width=400,
             drawing_mode=canvas_drawing_mode,
             point_display_radius=3 if canvas_drawing_mode == "point" else 0,
-            key="canvas",
+            key=f"canvas_{st.session_state.canvas_key}",  # Dynamic key
         )
         
         # Canvas'tan veri al
