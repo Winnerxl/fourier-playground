@@ -303,18 +303,21 @@ if st.session_state.original_image is not None:
             canvas_drawing_mode = "freedraw"
             stroke_color = "#FF0000"  # Kırmızı
         
+        current_magnitude = get_magnitude_spectrum(st.session_state.modified_fft)
+        fresh_spectrum_image = spectrum_to_image(current_magnitude)
+        
         # Drawable canvas
         canvas_result = st_canvas(
             fill_color="rgba(0, 0, 0, 0)",
             stroke_width=stroke_width,
             stroke_color=stroke_color,
-            background_image=st.session_state.spectrum_image,
+            background_image=fresh_spectrum_image, # BURASI DEĞİŞTİ
             update_streamlit=True,
             height=400,
             width=400,
             drawing_mode=canvas_drawing_mode,
             point_display_radius=3 if canvas_drawing_mode == "point" else 0,
-            key=f"canvas_{st.session_state.canvas_key}",  # Dynamic key
+            key=f"canvas_{st.session_state.canvas_key}", 
         )
         
         # Canvas'tan veri al
