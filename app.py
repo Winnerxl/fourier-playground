@@ -71,6 +71,8 @@ def spectrum_to_image(magnitude_spectrum):
     normalized = (magnitude_spectrum - magnitude_spectrum.min()) / \
                  (magnitude_spectrum.max() - magnitude_spectrum.min())
     normalized = (normalized * 255).astype(np.uint8)
+
+    normalized = np.ascontiguousarray(normalized)
     
     # PIL Image oluştur
     img = Image.fromarray(normalized).convert('RGB')
@@ -305,7 +307,7 @@ if st.session_state.original_image is not None:
         
         current_magnitude = get_magnitude_spectrum(st.session_state.modified_fft)
         fresh_spectrum_image = spectrum_to_image(current_magnitude)
-        
+
         # Drawable canvas
         canvas_result = st_canvas(
             fill_color="rgba(0, 0, 0, 0)",
