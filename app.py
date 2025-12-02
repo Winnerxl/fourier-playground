@@ -318,7 +318,7 @@ if st.session_state.original_image is not None:
         buf = io.BytesIO()
         pil_img.save(buf, format="PNG")
         buf.seek(0)
-        safe_image = Image.open(buf)
+        safe_image = Image.open(buf).convert("RGBA")
         # ------------------------------
 
         # DEBUG BLOĞU: Spektrum gerçekten oluşuyor mu, direkt göster
@@ -335,12 +335,16 @@ if st.session_state.original_image is not None:
                 float(current_magnitude.max()),
             )
 
-        # Drawable canvas (background_image olarak 'safe_image' kullanıyoruz)
+        # Canvas için RGBA numpy array (image_data) hazırla
+        canvas_bg = np.array(safe_image)
+
+        # Drawable canvas (image_data olarak spektrumu kullanıyoruz)
         canvas_result = st_canvas(
             fill_color="rgba(0, 0, 0, 0)",
             stroke_width=stroke_width,
             stroke_color=stroke_color,
-            background_image=safe_image, # Düzeltilmiş resim burada
+            background_image=None,
+            image_data=canvas_bg,
             update_streamlit=True,
             height=400,
             width=400,
