@@ -1,38 +1,309 @@
-.App {
+/* App.css - Modern Engineering Theme */
+
+:root {
+  --bg-dark: #121212;
+  --bg-panel: #1e1e1e;
+  --bg-card: #252526;
+  --accent: #007acc;
+  --text-main: #e0e0e0;
+  --text-dim: #858585;
+  --border: #333;
+}
+
+body {
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+  font-family: 'Inter', -apple-system, sans-serif;
+  margin: 0;
+  overflow: hidden; /* Prevent full page scroll */
+}
+
+header {
+  height: 50px;
+  background-color: var(--bg-panel);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 1rem;
+}
+
+header h1 {
+  font-size: 1.2rem;
+  margin: 0;
+  font-weight: 500;
+  color: var(--accent);
+}
+
+/* --- Layout Grid --- */
+.main-layout {
+  display: flex;
+  height: calc(100vh - 50px);
+}
+
+/* --- Sidebar --- */
+.sidebar {
+  width: 260px;
+  background-color: var(--bg-panel);
+  border-right: 1px solid var(--border);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  flex-shrink: 0;
+}
+
+.control-group h3 {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-top: 0;
+  margin-bottom: 10px;
+  letter-spacing: 1px;
+}
+
+/* Stylish file upload */
+.file-upload-btn {
+  display: block;
+  padding: 10px;
+  background: var(--bg-card);
+  border: 1px dashed var(--text-dim);
   text-align: center;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+.file-upload-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+input[type="file"] { display: none; }
+
+/* Buttons */
+.btn-group { display: flex; gap: 1px; background: var(--border); padding: 1px; border-radius: 4px; overflow: hidden; }
+.btn-group button {
+  flex: 1;
+  background: var(--bg-card);
+  border: none;
+  padding: 8px;
+  color: var(--text-main);
+  cursor: pointer;
+  transition: 0.2s;
+}
+.btn-group button:hover { background: #333; }
+.btn-group button.active { background: var(--accent); color: white; }
+
+.danger-btn {
+  width: 100%;
+  background: #3a1d1d;
+  color: #ff6b6b;
+  border: 1px solid #ff6b6b;
+  padding: 8px;
+  border-radius: 4px;
+  margin-top: 10px;
+  cursor: pointer;
+}
+.danger-btn:hover { background: #ff6b6b; color: white; }
+
+.preset-btn {
+  width: 100%;
+  background: var(--bg-card);
+  color: var(--text-main);
+  border: 1px solid var(--border);
+  padding: 10px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.85rem;
+  text-align: left;
+}
+.preset-btn:hover:not(:disabled) { 
+  background: #2d2d30;
+  border-color: var(--accent);
+  transform: translateX(2px);
+}
+.preset-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+/* --- Workspace Area --- */
+.workspace {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: #0d0d0d;
+  position: relative;
+  overflow: hidden;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+/* Image Stage (Top part) */
+.image-stage {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  padding: 20px;
+  overflow-y: auto;
+  flex-wrap: wrap; /* Wrap on small screens */
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+/* Add this to App.css */
+
+.slider-group {
+  display: flex;
+  flex-direction: column;
+  gap: 15px; /* Space between the two sliders */
+}
+
+.slider-item {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.slider-header {
+  display: flex;
+  justify-content: space-between; /* Pushes text to left, value to right */
+  align-items: center;
+  font-size: 0.85rem;
+  color: #bbb;
+  user-select: none; /* Prevents text highlighting while dragging */
+}
+
+.slider-header strong {
+  color: var(--accent);
+  font-family: monospace;
+}
+
+input[type="range"] {
+  width: 100%;
+  margin: 0; /* Reset default margins since we use flex gap */
+  cursor: pointer;
+}
+
+.panel {
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 10px;
+}
+.panel h4 { margin: 0; color: var(--text-dim); font-weight: 400; font-size: 0.9rem; }
+.highlight { color: var(--accent); font-size: 0.8rem; }
+
+.canvas-container {
+  padding: 4px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  border-radius: 4px;
+}
+.canvas-container img, .canvas-container canvas {
+  display: block;
+  width: 400px; /* Fixed size for consistency */
+  height: 400px;
+  background: #000;
+}
+
+/* --- Analysis Dock (Bottom part) --- */
+.analysis-dock {
+  height: 250px; /* Slightly shorter */
+  background-color: #1e1e1e;
+  border-top: 1px solid #333;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
+  position: relative;
+  z-index: 10;
+}
+
+.dock-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+  height: 40px;
+  background: #252526;
+  border-bottom: 1px solid #333;
+}
+
+.dock-header h3 {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0 5px;
+}
+.close-btn:hover { color: white; }
+
+/* The Grid Layout for Content */
+.dock-content {
+  flex: 1;
+  display: grid;
+  /* 3 Columns: Metrics (20%), 2D Plot (30%), 3D Plot (50%) */
+  grid-template-columns: 200px 300px 1fr; 
+  gap: 20px;
+  padding: 15px 30px;
+  overflow: hidden;
+}
+
+/* Column 1: Metrics - Styled like code variables */
+.dock-info {
+  display: flex;
+  flex-direction: column;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  gap: 15px;
+  border-right: 1px solid #333;
+  padding-right: 20px;
 }
 
-.App-link {
-  color: #61dafb;
+.metric {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  border-bottom: 1px solid #2a2a2a;
+  padding-bottom: 5px;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.metric label {
+  font-size: 0.7rem;
+  color: #888;
+  font-weight: 600;
 }
+
+.metric span {
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 0.95rem;
+  color: #dcdcdc;
+}
+
+/* Column 2 & 3: Containers */
+.dock-viz {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  position: relative;
+}
+
+/* Remove the specific borders/boxes to make it look integrated */
+.viz-box {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Fix for responsive images */
+.placeholder { width: 400px; height: 400px; display: flex; align-items: center; justify-content: center; color: #555; background: #1a1a1a; border: 2px dashed #333; }
