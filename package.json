@@ -1,6 +1,7 @@
 {
-  "name": "fourier-app",
+  "name": "fourier-playground",
   "version": "0.1.0",
+  "homepage": "/fourier-playground",
   "private": true,
   "dependencies": {
     "@testing-library/dom": "^10.4.1",

@@ -407,7 +407,10 @@ function App() {
     return (
         <div className="App">
             <header>
-                <h1>⚛️ Fourier Workbench</h1>
+                <div className="header-content">
+                    <h1>Fourier Playground</h1>
+                    <p className="header-subtitle">Interactive 2D FFT exploration and frequency domain image processing</p>
+                </div>
             </header>
 
             <div className="main-layout">

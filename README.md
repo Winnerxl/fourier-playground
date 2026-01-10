@@ -1,70 +1,117 @@
-# Getting Started with Create React App
+# Fourier Playground
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+An interactive web application for exploring the 2D Fast Fourier Transform (FFT) and frequency domain image processing. Upload images, visualize their frequency spectra, and manipulate frequencies in real-time to see how changes in the frequency domain affect the reconstructed image.
 
-## Available Scripts
+## Features
 
-In the project directory, you can run:
+### Image Processing
+- **Image Upload**: Upload any image file and automatically convert to grayscale
+- **Smart Resizing**: Images are automatically cropped/resized to 512×512 pixels (power of 2 for efficient FFT computation)
+- **Real-time Processing**: Instant FFT computation and visualization
 
-### `npm start`
+### Frequency Domain Visualization
+- **Interactive Spectrum**: Click and drag on the frequency spectrum to manipulate frequencies
+- **Live Preview**: See changes to the reconstructed image in real-time
+- **Magnitude Display**: Logarithmic magnitude spectrum visualization for better dynamic range
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### Interactive Tools
+- **Inspect Tool**: Click on any frequency component to view its properties (magnitude, phase) and see the corresponding 2D basis function
+- **Brush Tool**: Enhance specific frequencies by painting on the spectrum
+- **Eraser Tool**: Remove or suppress frequencies by erasing them
+- **Adjustable Parameters**: Control brush size (1-50px) and strength/opacity (1-5x)
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### ⚡ Preset Filters
+- **Low-Pass Filter**: Blur images by keeping only low frequencies
+- **High-Pass Filter**: Extract edges by keeping only high frequencies
+- **Band-Pass Filter**: Isolate specific frequency ranges
+- **Notch Filters**: Remove horizontal or vertical stripes (periodic patterns)
 
-### `npm test`
+### Analysis Tools
+- **2D Basis Function Visualization**: See the 2D sinusoidal wave pattern for any selected frequency component
+- **3D Topology View**: Interactive 3D surface plot showing the wave's amplitude and phase
+- **Frequency Metrics**: Display position, magnitude, and phase information for selected points
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Technical Details
 
-### `npm run build`
+### Core Technologies
+- **React 19**: Modern React with hooks for state management
+- **fft.js**: Fast Fourier Transform library for efficient 2D FFT computation
+- **Plotly.js**: 3D surface visualization for wave topology
+- **Chart.js**: Additional charting capabilities
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### FFT Implementation
+- **2D FFT**: Row-column decomposition for efficient computation
+- **FFT Shift**: Automatic quadrant swapping for centered frequency display
+- **Complex Number Handling**: Separate real and imaginary component arrays
+- **Inverse FFT**: Real-time reconstruction from modified frequency domain
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### Image Processing Pipeline
+1. **Input**: Image file → Canvas → Grayscale conversion
+2. **Forward FFT**: Grayscale array → 2D FFT → Frequency domain (complex)
+3. **Visualization**: Complex data → Magnitude spectrum → Canvas display
+4. **Masking**: User interactions → Frequency mask → Applied to complex data
+5. **Inverse FFT**: Masked complex data → IFFT → Reconstructed image
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## Getting Started
 
-### `npm run eject`
+### Prerequisites
+- Node.js (v14 or higher)
+- npm or yarn
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### Installation
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```bash
+# Install dependencies
+npm install
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+# Start development server
+npm start
+```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+The application will open at [http://localhost:3000](http://localhost:3000)
 
-## Learn More
+### Build for Production
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+```bash
+npm run build
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## Usage
 
-### Code Splitting
+1. **Upload an Image**: Click "Choose Image" and select an image file
+2. **Explore the Spectrum**: The frequency spectrum appears in the center panel
+3. **Interact**:
+   - Use **Inspect** to click and view frequency component details
+   - Use **Brush** to enhance frequencies (paint with green cursor)
+   - Use **Eraser** to remove frequencies (paint with red cursor)
+4. **Apply Presets**: Try the preset filters to see common frequency domain operations
+5. **Analyze**: Click on frequencies to see 2D and 3D visualizations of the basis functions
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## Project Structure
 
-### Analyzing the Bundle Size
+```
+src/
+├── App.js          # Main application component with FFT logic
+├── Wave2D.js       # 2D basis function visualization
+├── Wave3D.js       # 3D surface plot visualization
+├── dspUtils.js     # FFT computation and image processing utilities
+└── App.css         # Styling
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## Key Concepts
 
-### Making a Progressive Web App
+### Frequency Domain
+Images can be represented as a sum of sinusoidal waves of different frequencies, orientations, and phases. The FFT converts spatial domain images into this frequency representation.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+### Frequency Masking
+By multiplying frequency components by a mask (0 to 1), you can:
+- **Suppress frequencies** (mask = 0): Remove patterns
+- **Enhance frequencies** (mask > 1): Amplify patterns
+- **Preserve frequencies** (mask = 1): Keep original
 
-### Advanced Configuration
+### Basis Functions
+Each point in the frequency domain represents a 2D sinusoidal wave pattern. The magnitude determines amplitude, phase determines shift, and position determines frequency and orientation.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+## License
 
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+This project is open source and available for educational and personal use.
