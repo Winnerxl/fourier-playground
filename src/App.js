@@ -559,7 +559,7 @@ function App() {
                                 title="Remove horizontal lines"
                                 disabled={!fftData}
                             >
-                                ║ Remove V-Lines
+                                ═ Remove H-Lines
                             </button>
                             <button
                                 className="preset-btn"
@@ -567,7 +567,7 @@ function App() {
                                 title="Remove vertical lines"
                                 disabled={!fftData}
                             >
-                                ═ Remove H-Lines
+                                ║ Remove V-Lines
                             </button>
                         </div>
                     </div>
