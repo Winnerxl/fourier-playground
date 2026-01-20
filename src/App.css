@@ -15,7 +15,7 @@ body {
   color: var(--text-main);
   font-family: 'Inter', -apple-system, sans-serif;
   margin: 0;
-  overflow: hidden; /* Prevent full page scroll */
+  /* overflow: hidden;  <-- REMOVED: Allow scrolling on mobile if needed */
 }
 
 header {
@@ -52,7 +52,8 @@ header h1 {
 /* --- Layout Grid --- */
 .main-layout {
   display: flex;
-  height: calc(100vh - 70px); /* Adjusted for taller header */
+  height: calc(100vh - 70px); /* Desktop default */
+  overflow: hidden; /* Desktop default */
 }
 
 /* --- Sidebar --- */
@@ -65,6 +66,7 @@ header h1 {
   flex-direction: column;
   gap: 1.5rem;
   flex-shrink: 0;
+  overflow-y: auto; /* Allow sidebar scrolling */
 }
 
 .control-group h3 {
@@ -79,13 +81,17 @@ header h1 {
 /* Stylish file upload */
 .file-upload-btn {
   display: block;
-  padding: 10px;
+  padding: 12px; /* Increased touch target */
   background: var(--bg-card);
   border: 1px dashed var(--text-dim);
   text-align: center;
   cursor: pointer;
   border-radius: 4px;
   transition: all 0.2s;
+  min-height: 44px; /* Touch friendly */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .file-upload-btn:hover {
   border-color: var(--accent);
@@ -99,10 +105,11 @@ input[type="file"] { display: none; }
   flex: 1;
   background: var(--bg-card);
   border: none;
-  padding: 8px;
+  padding: 12px 8px; /* Increased touch area */
   color: var(--text-main);
   cursor: pointer;
   transition: 0.2s;
+  min-height: 44px;
 }
 .btn-group button:hover { background: #333; }
 .btn-group button.active { background: var(--accent); color: white; }
@@ -112,10 +119,11 @@ input[type="file"] { display: none; }
   background: #3a1d1d;
   color: #ff6b6b;
   border: 1px solid #ff6b6b;
-  padding: 8px;
+  padding: 12px;
   border-radius: 4px;
   margin-top: 10px;
   cursor: pointer;
+  min-height: 44px;
 }
 .danger-btn:hover { background: #ff6b6b; color: white; }
 
@@ -124,12 +132,13 @@ input[type="file"] { display: none; }
   background: var(--bg-card);
   color: var(--text-main);
   border: 1px solid var(--border);
-  padding: 10px 12px;
+  padding: 12px;
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   text-align: left;
+  min-height: 44px;
 }
 .preset-btn:hover:not(:disabled) { 
   background: #2d2d30;
@@ -163,27 +172,26 @@ input[type="file"] { display: none; }
   flex-wrap: wrap; /* Wrap on small screens */
 }
 
-/* Add this to App.css */
-
+/* Callouts for Sliders */
 .slider-group {
   display: flex;
   flex-direction: column;
-  gap: 15px; /* Space between the two sliders */
+  gap: 15px; 
 }
 
 .slider-item {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 8px; /* More gap for touch */
 }
 
 .slider-header {
   display: flex;
-  justify-content: space-between; /* Pushes text to left, value to right */
+  justify-content: space-between; 
   align-items: center;
   font-size: 0.85rem;
   color: #bbb;
-  user-select: none; /* Prevents text highlighting while dragging */
+  user-select: none; 
 }
 
 .slider-header strong {
@@ -193,8 +201,9 @@ input[type="file"] { display: none; }
 
 input[type="range"] {
   width: 100%;
-  margin: 0; /* Reset default margins since we use flex gap */
+  margin: 0;
   cursor: pointer;
+  height: 20px; /* Taller track area */
 }
 
 .panel {
@@ -202,6 +211,8 @@ input[type="range"] {
   flex-direction: column;
   align-items: center;
   gap: 10px;
+  width: 100%; /* Take full width available */
+  max-width: 400px; /* But don't exceed desktop size */
 }
 .panel h4 { margin: 0; color: var(--text-dim); font-weight: 400; font-size: 0.9rem; }
 .highlight { color: var(--accent); font-size: 0.8rem; }
@@ -212,11 +223,19 @@ input[type="range"] {
   border: 1px solid var(--border);
   box-shadow: 0 4px 20px rgba(0,0,0,0.5);
   border-radius: 4px;
+  width: 100%;
+  aspect-ratio: 1 / 1; /* Keep square aspect ratio */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
+
+/* Make canvas Responsive */
 .canvas-container img, .canvas-container canvas {
   display: block;
-  width: 400px; /* Fixed size for consistency */
-  height: 400px;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
   background: #000;
 }
 
@@ -255,9 +274,9 @@ input[type="range"] {
   background: none;
   border: none;
   color: #666;
-  font-size: 1.2rem;
+  font-size: 1.5rem; /* Larger hit area */
   cursor: pointer;
-  padding: 0 5px;
+  padding: 0 10px;
 }
 .close-btn:hover { color: white; }
 
@@ -265,14 +284,13 @@ input[type="range"] {
 .dock-content {
   flex: 1;
   display: grid;
-  /* 3 Columns: Metrics (20%), 2D Plot (30%), 3D Plot (50%) */
+  /* 3 Columns default */
   grid-template-columns: 200px 300px 1fr; 
   gap: 20px;
   padding: 15px 30px;
-  overflow: hidden;
+  overflow: auto; /* Fix overflow */
 }
 
-/* Column 1: Metrics - Styled like code variables */
 .dock-info {
   display: flex;
   flex-direction: column;
@@ -302,7 +320,6 @@ input[type="range"] {
   color: #dcdcdc;
 }
 
-/* Column 2 & 3: Containers */
 .dock-viz {
   display: flex;
   align-items: center;
@@ -311,14 +328,81 @@ input[type="range"] {
   position: relative;
 }
 
-/* Remove the specific borders/boxes to make it look integrated */
-.viz-box {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.placeholder { 
+  width: 100%; 
+  height: 100%; 
+  aspect-ratio: 1/1; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  color: #555; 
+  background: #1a1a1a; 
+  border: 2px dashed #333; 
 }
 
-/* Fix for responsive images */
-.placeholder { width: 400px; height: 400px; display: flex; align-items: center; justify-content: center; color: #555; background: #1a1a1a; border: 2px dashed #333; }
+
+/* ===========================
+   MEDIA QUERIES (Mobile) 
+   =========================== */
+
+@media (max-width: 768px) {
+  body {
+    overflow: auto; /* Enable full page scrolling */
+  }
+
+  .main-layout {
+    flex-direction: column;
+    height: auto; /* Allow content to dictate height */
+    overflow: visible;
+  }
+
+  /* 1. Put Workspace FIRST (on top) */
+  .workspace {
+    order: 1;
+    overflow: visible; /* Prevent clipping */
+    min-height: 50vh;
+  }
+
+  /* 2. Put Sidebar SECOND (below) */
+  .sidebar {
+    order: 2;
+    width: 100%; /* Full width */
+    height: auto;
+    border-right: none;
+    border-top: 1px solid var(--border);
+    padding: 20px;
+    box-sizing: border-box;
+  }
+
+  /* Image Stage: Stack panels vertically */
+  .image-stage {
+    flex-direction: column;
+    padding: 10px;
+    gap: 30px;
+  }
+
+  .panel {
+    max-width: 100%; /* Full width cards */
+  }
+  
+  /* Make canvases scale with screen width */
+  .canvas-container {
+    width: 100%;
+    max-width: 350px; /* Don't get TOO huge on tablets */
+  }
+
+  /* Analysis Dock: Stack columns vertically */
+  .dock-content {
+    grid-template-columns: 1fr; /* Single column */
+    gap: 30px;
+    padding: 20px;
+  }
+  
+  .dock-info {
+    border-right: none;
+    border-bottom: 1px solid #333;
+    padding-bottom: 20px;
+    padding-right: 0;
+  }
+}
+

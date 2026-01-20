@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { 
-    imageToGrayscaleArray, computeFFT2D, fftShift, ifftShift, 
-    computeIFFT2D, getMagnitudeSpectrum, COMP_SIZE 
+import {
+    imageToGrayscaleArray, computeFFT2D, fftShift, ifftShift,
+    computeIFFT2D, getMagnitudeSpectrum, COMP_SIZE
 } from './dspUtils';
 import './App.css';
 import Wave2D from './Wave2D';
@@ -12,11 +12,12 @@ function App() {
     const [originalImg, setOriginalImg] = useState(null); // ImageData
     const [fftData, setFftData] = useState(null); // {real, imag}
     const [mask, setMask] = useState(null); // Float32Array
-    
+
     const [tool, setTool] = useState('point'); // point, brush, eraser
     const [brushSize, setBrushSize] = useState(10);
     const [brushStrength, setBrushStrength] = useState(2.0);
-    
+    const [isSymmetric, setIsSymmetric] = useState(true); // Default to on for validity
+
     const [selectedPoint, setSelectedPoint] = useState(null);
     const [hoverPos, setHoverPos] = useState({ x: 0, y: 0 }); // Added for Hover Display
     const [stats, setStats] = useState({ active: 0, max: 0 });
@@ -26,12 +27,12 @@ function App() {
     const spectrumRef = useRef(null);
     const resultRef = useRef(null);
     const lastPosRef = useRef(null);
-    
+
     // --- Handlers ---
 
     const handleImageUpload = (e) => {
         const file = e.target.files[0];
-        if(!file) return;
+        if (!file) return;
 
         const reader = new FileReader();
         reader.onload = (event) => {
@@ -41,30 +42,30 @@ function App() {
                 canvas.width = COMP_SIZE;
                 canvas.height = COMP_SIZE;
                 const ctx = canvas.getContext('2d');
-                
+
                 // Smart Crop / Resize Logic
                 const side = Math.min(img.width, img.height);
                 const sx = (img.width - side) / 2;
                 const sy = (img.height - side) / 2;
-                
+
                 if (side >= COMP_SIZE) {
                     const cx = img.width / 2;
                     const cy = img.height / 2;
-                    ctx.drawImage(img, 
-                        cx - COMP_SIZE/2, cy - COMP_SIZE/2, COMP_SIZE, COMP_SIZE, 
+                    ctx.drawImage(img,
+                        cx - COMP_SIZE / 2, cy - COMP_SIZE / 2, COMP_SIZE, COMP_SIZE,
                         0, 0, COMP_SIZE, COMP_SIZE
                     );
                 } else {
                     ctx.drawImage(img, sx, sy, side, side, 0, 0, COMP_SIZE, COMP_SIZE);
                 }
-                
+
                 const imageData = ctx.getImageData(0, 0, COMP_SIZE, COMP_SIZE);
-                
+
                 // Process
                 const grayArray = imageToGrayscaleArray(imageData);
                 const fftRaw = computeFFT2D(grayArray, COMP_SIZE, COMP_SIZE);
                 const fftShifted = fftShift(fftRaw, COMP_SIZE, COMP_SIZE);
-                
+
                 // Init State
                 setOriginalImg(canvas.toDataURL());
                 setFftData(fftShifted);
@@ -80,21 +81,21 @@ function App() {
         if (!canvas || !baseSpectrumRef.current) return;
 
         const ctx = canvas.getContext('2d');
-        
+
         // 1. Restore the clean spectrum (wipes previous cursor)
         ctx.putImageData(baseSpectrumRef.current, 0, 0);
 
         // 2. Draw Live Cursor (if tool is active and we have a position)
         if ((tool === 'brush' || tool === 'eraser') && hoverPos) {
             const { x, y } = hoverPos;
-            
+
             ctx.beginPath();
             ctx.arc(x, y, brushSize, 0, 2 * Math.PI);
             ctx.lineWidth = 2;
             // Green for Brush, Red/Pink for Eraser
             ctx.strokeStyle = tool === 'brush' ? 'rgba(0, 255, 0, 0.9)' : 'rgba(255, 0, 85, 0.9)';
             ctx.stroke();
-            
+
             // Optional: Subtle fill to help visualize the area
             ctx.fillStyle = tool === 'brush' ? 'rgba(0, 255, 0, 0.1)' : 'rgba(255, 0, 85, 0.1)';
             ctx.fill();
@@ -105,19 +106,19 @@ function App() {
 
     // Wrapped in useCallback to satisfy ESLint dependency warning
     const reconstructImage = useCallback(() => {
-        if(!fftData || !mask) return;
+        if (!fftData || !mask) return;
 
         // 1. Apply Mask to Complex Data
         const maskedReal = new Float32Array(fftData.real.length);
         const maskedImag = new Float32Array(fftData.imag.length);
 
-        for(let i=0; i<maskedReal.length; i++) {
+        for (let i = 0; i < maskedReal.length; i++) {
             maskedReal[i] = fftData.real[i] * mask[i];
             maskedImag[i] = fftData.imag[i] * mask[i];
         }
 
         // 2. IFFT Shift (Unshift)
-        const unshifted = ifftShift({real: maskedReal, imag: maskedImag}, COMP_SIZE, COMP_SIZE);
+        const unshifted = ifftShift({ real: maskedReal, imag: maskedImag }, COMP_SIZE, COMP_SIZE);
 
         // 3. Inverse FFT
         const resultPixels = computeIFFT2D(unshifted, COMP_SIZE, COMP_SIZE);
@@ -125,20 +126,20 @@ function App() {
         // 4. Draw to Result Canvas
         const canvas = resultRef.current;
         if (!canvas) return;
-        
+
         const ctx = canvas.getContext('2d');
         const imgData = ctx.createImageData(COMP_SIZE, COMP_SIZE);
 
         // Normalize Result
         let max = 0;
-        for(let p of resultPixels) if(p > max) max = p;
+        for (let p of resultPixels) if (p > max) max = p;
 
-        for(let i=0; i<resultPixels.length; i++) {
+        for (let i = 0; i < resultPixels.length; i++) {
             const val = (resultPixels[i] / max) * 255;
-            imgData.data[i*4] = val;
-            imgData.data[i*4+1] = val;
-            imgData.data[i*4+2] = val;
-            imgData.data[i*4+3] = 255;
+            imgData.data[i * 4] = val;
+            imgData.data[i * 4 + 1] = val;
+            imgData.data[i * 4 + 2] = val;
+            imgData.data[i * 4 + 3] = 255;
         }
         ctx.putImageData(imgData, 0, 0);
     }, [fftData, mask]);
@@ -150,34 +151,34 @@ function App() {
 
     // Effect 2: Main Computation (Runs only when Image/Mask changes)
     useEffect(() => {
-        if(!fftData || !mask || !spectrumRef.current) return;
+        if (!fftData || !mask || !spectrumRef.current) return;
 
         const magnitude = getMagnitudeSpectrum(fftData);
         const ctx = spectrumRef.current.getContext('2d');
         const imgData = ctx.createImageData(COMP_SIZE, COMP_SIZE);
 
         // --- Math Loop ---
-        let maxVal = 0; 
+        let maxVal = 0;
         let minVal = Infinity;
-        for(let i=0; i<magnitude.length; i++) {
-            const val = magnitude[i] * mask[i]; 
-            if(val > maxVal) maxVal = val;
-            if(val < minVal) minVal = val;
+        for (let i = 0; i < magnitude.length; i++) {
+            const val = magnitude[i] * mask[i];
+            if (val > maxVal) maxVal = val;
+            if (val < minVal) minVal = val;
         }
 
         for (let i = 0; i < magnitude.length; i++) {
             let val = magnitude[i] * mask[i];
             const norm = ((val - minVal) / (maxVal - minVal)) * 255;
-            
-            imgData.data[i*4] = norm;     
-            imgData.data[i*4+1] = norm;   
-            imgData.data[i*4+2] = norm;   
-            imgData.data[i*4+3] = 255;    
+
+            imgData.data[i * 4] = norm;
+            imgData.data[i * 4 + 1] = norm;
+            imgData.data[i * 4 + 2] = norm;
+            imgData.data[i * 4 + 3] = 255;
         }
-        
+
         // Store the clean image in Ref (Cache it!)
         baseSpectrumRef.current = imgData;
-        
+
         // Draw it immediately
         drawSpectrumVisuals();
 
@@ -195,10 +196,10 @@ function App() {
     // --- Interaction ---
 
     const handleCanvasInteraction = (e) => {
-        if(!mask) return;
+        if (!mask) return;
 
-        // 1. Handle Mouse Up/Leave (Reset the line)
-        if (e.type === 'mouseup' || e.type === 'mouseleave') {
+        // 1. Handle Mouse Up/Leave/Touch End
+        if (e.type === 'mouseup' || e.type === 'mouseleave' || e.type === 'touchend') {
             lastPosRef.current = null;
             setHoverPos(null);
             return;
@@ -209,8 +210,22 @@ function App() {
         const scaleX = canvas.width / rect.width;
         const scaleY = canvas.height / rect.height;
 
-        const rawX = (e.clientX - rect.left) * scaleX;
-        const rawY = (e.clientY - rect.top) * scaleY;
+        // Unified Input Coordinates
+        let clientX, clientY;
+        if (e.type.startsWith('touch')) {
+            if (e.touches && e.touches.length > 0) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else {
+                return;
+            }
+        } else {
+            clientX = e.clientX;
+            clientY = e.clientY;
+        }
+
+        const rawX = (clientX - rect.left) * scaleX;
+        const rawY = (clientY - rect.top) * scaleY;
         const x = Math.floor(rawX);
         const y = Math.floor(rawY);
 
@@ -219,9 +234,9 @@ function App() {
             setHoverPos({ x, y });
         }
 
-        // 2. Button Check
-        if (e.buttons !== 1) {
-            lastPosRef.current = null; // Reset if not holding click
+        // 2. Input Validation (Mouse requires click, Touch is always click)
+        if (e.type.startsWith('mouse') && e.buttons !== 1) {
+            lastPosRef.current = null;
             return;
         }
 
@@ -230,18 +245,36 @@ function App() {
         const applyBrushToPoint = (cx, cy, targetMask) => {
             const r = brushSize;
             let modified = false;
-            for(let dy = -r; dy <= r; dy++) {
-                for(let dx = -r; dx <= r; dx++) {
-                    if(dx*dx + dy*dy <= r*r) {
+            for (let dy = -r; dy <= r; dy++) {
+                for (let dx = -r; dx <= r; dx++) {
+                    if (dx * dx + dy * dy <= r * r) {
+                        // 1. Draw at cursor
                         const nx = Math.floor(cx + dx);
                         const ny = Math.floor(cy + dy);
-                        if(nx >=0 && nx < COMP_SIZE && ny >= 0 && ny < COMP_SIZE) {
+                        if (nx >= 0 && nx < COMP_SIZE && ny >= 0 && ny < COMP_SIZE) {
                             const idx = ny * COMP_SIZE + nx;
                             const val = tool === 'brush' ? brushStrength : 0.0;
-                            // Only update if value is different to save processing
                             if (targetMask[idx] !== val) {
                                 targetMask[idx] = val;
                                 modified = true;
+                            }
+                        }
+
+                        // 2. Draw at symmetric point (if enabled)
+                        if (isSymmetric) {
+                            // Central Symmetry: (N-x, N-y)
+                            // We use modulo just in case, but usually simple subtraction works
+                            const center = COMP_SIZE;
+                            const sx = (center - nx) % center;
+                            const sy = (center - ny) % center;
+
+                            if (sx >= 0 && sx < COMP_SIZE && sy >= 0 && sy < COMP_SIZE) {
+                                const idxSym = sy * COMP_SIZE + sx;
+                                const val = tool === 'brush' ? brushStrength : 0.0;
+                                if (targetMask[idxSym] !== val) {
+                                    targetMask[idxSym] = val;
+                                    modified = true;
+                                }
                             }
                         }
                     }
@@ -266,7 +299,7 @@ function App() {
                     const t = steps === 0 ? 0 : i / steps;
                     const lerpX = x0 + (x - x0) * t;
                     const lerpY = y0 + (y - y0) * t;
-                    
+
                     if (applyBrushToPoint(lerpX, lerpY, newMask)) {
                         hasChanges = true;
                     }
@@ -286,9 +319,9 @@ function App() {
             if (hasChanges) setMask(newMask);
         } else {
             // Point Tool logic (Inspect) remains simple
-             if(e.type === 'mousedown') {
+            if (e.type === 'mousedown' || e.type === 'touchstart') {
                 const idx = y * COMP_SIZE + x;
-                const mag = Math.sqrt(fftData.real[idx]**2 + fftData.imag[idx]**2);
+                const mag = Math.sqrt(fftData.real[idx] ** 2 + fftData.imag[idx] ** 2);
                 const phase = Math.atan2(fftData.imag[idx], fftData.real[idx]);
                 setSelectedPoint({ x, y, mag, phase });
             }
@@ -296,20 +329,20 @@ function App() {
     };
 
     const resetMask = () => {
-        if(mask) setMask(new Float32Array(COMP_SIZE * COMP_SIZE).fill(1.0));
+        if (mask) setMask(new Float32Array(COMP_SIZE * COMP_SIZE).fill(1.0));
     };
 
     // --- Preset Filters ---
     const applyLowPass = (radius = 100) => {
-        if(!mask) return;
+        if (!mask) return;
         const newMask = new Float32Array(COMP_SIZE * COMP_SIZE);
         const center = COMP_SIZE / 2;
-        
-        for(let y = 0; y < COMP_SIZE; y++) {
-            for(let x = 0; x < COMP_SIZE; x++) {
+
+        for (let y = 0; y < COMP_SIZE; y++) {
+            for (let x = 0; x < COMP_SIZE; x++) {
                 const dx = x - center;
                 const dy = y - center;
-                const dist = Math.sqrt(dx*dx + dy*dy);
+                const dist = Math.sqrt(dx * dx + dy * dy);
                 const idx = y * COMP_SIZE + x;
                 // Smooth falloff using Gaussian-like curve
                 const diff = (dist - radius) / 20;
@@ -320,15 +353,15 @@ function App() {
     };
 
     const applyHighPass = (radius = 50) => {
-        if(!mask) return;
+        if (!mask) return;
         const newMask = new Float32Array(COMP_SIZE * COMP_SIZE);
         const center = COMP_SIZE / 2;
-        
-        for(let y = 0; y < COMP_SIZE; y++) {
-            for(let x = 0; x < COMP_SIZE; x++) {
+
+        for (let y = 0; y < COMP_SIZE; y++) {
+            for (let x = 0; x < COMP_SIZE; x++) {
                 const dx = x - center;
                 const dy = y - center;
-                const dist = Math.sqrt(dx*dx + dy*dy);
+                const dist = Math.sqrt(dx * dx + dy * dy);
                 const idx = y * COMP_SIZE + x;
                 // Inverse of low-pass with smooth transition
                 const diff = (radius - dist) / 20;
@@ -339,20 +372,20 @@ function App() {
     };
 
     const applyBandPass = (innerRadius = 50, outerRadius = 150) => {
-        if(!mask) return;
+        if (!mask) return;
         const newMask = new Float32Array(COMP_SIZE * COMP_SIZE);
         const center = COMP_SIZE / 2;
-        
-        for(let y = 0; y < COMP_SIZE; y++) {
-            for(let x = 0; x < COMP_SIZE; x++) {
+
+        for (let y = 0; y < COMP_SIZE; y++) {
+            for (let x = 0; x < COMP_SIZE; x++) {
                 const dx = x - center;
                 const dy = y - center;
-                const dist = Math.sqrt(dx*dx + dy*dy);
+                const dist = Math.sqrt(dx * dx + dy * dy);
                 const idx = y * COMP_SIZE + x;
-                
-                if(dist >= innerRadius && dist <= outerRadius) {
+
+                if (dist >= innerRadius && dist <= outerRadius) {
                     newMask[idx] = 1.0;
-                } else if(dist < innerRadius) {
+                } else if (dist < innerRadius) {
                     const diff = (innerRadius - dist) / 15;
                     newMask[idx] = Math.exp(-(diff * diff));
                 } else {
@@ -365,25 +398,25 @@ function App() {
     };
 
     const applyNotch = (x1, y1, x2, y2, radius = 15) => {
-        if(!mask) return;
+        if (!mask) return;
         const newMask = new Float32Array(mask); // Start with current mask
-        
+
         // Remove frequencies at two symmetric points
-        for(let y = 0; y < COMP_SIZE; y++) {
-            for(let x = 0; x < COMP_SIZE; x++) {
+        for (let y = 0; y < COMP_SIZE; y++) {
+            for (let x = 0; x < COMP_SIZE; x++) {
                 const idx = y * COMP_SIZE + x;
-                
+
                 // Distance to first point
                 const d1 = Math.sqrt((x - x1) * (x - x1) + (y - y1) * (y - y1));
                 // Distance to symmetric point
                 const d2 = Math.sqrt((x - x2) * (x - x2) + (y - y2) * (y - y2));
-                
-                if(d1 <= radius || d2 <= radius) {
+
+                if (d1 <= radius || d2 <= radius) {
                     newMask[idx] = 0.0;
-                } else if(d1 <= radius + 10) {
+                } else if (d1 <= radius + 10) {
                     const diff = (radius + 10 - d1) / 5;
                     newMask[idx] *= Math.exp(-(diff * diff));
-                } else if(d2 <= radius + 10) {
+                } else if (d2 <= radius + 10) {
                     const diff = (radius + 10 - d2) / 5;
                     newMask[idx] *= Math.exp(-(diff * diff));
                 }
@@ -427,57 +460,67 @@ function App() {
                     <div className="card control-group">
                         <h3>🛠 Tools</h3>
                         <div className="btn-group">
-                            <button 
-                                className={tool==='point'?'active':''} 
-                                onClick={()=>setTool('point')} 
+                            <button
+                                className={tool === 'point' ? 'active' : ''}
+                                onClick={() => setTool('point')}
                                 title="Inspect Spectrum"
                             >🔍 Inspect</button>
-                            <button 
-                                className={tool==='brush'?'active':''} 
-                                onClick={()=>setTool('brush')}
+                            <button
+                                className={tool === 'brush' ? 'active' : ''}
+                                onClick={() => setTool('brush')}
                                 title="Enhance Frequencies"
                             >🖌️ Brush</button>
-                            <button 
-                                className={tool==='eraser'?'active':''} 
-                                onClick={()=>setTool('eraser')}
+                            <button
+                                className={tool === 'eraser' ? 'active' : ''}
+                                onClick={() => setTool('eraser')}
                                 title="Remove Frequencies"
                             >🧼 Eraser</button>
                         </div>
-                        
+
                         {tool !== 'point' && (
                             <div className="slider-group">
-                                
+
                                 {/* Slider 1: Size */}
                                 <div className="slider-item">
                                     <div className="slider-header">
                                         <span>Brush Size</span>
                                         <strong>{brushSize}px</strong>
                                     </div>
-                                    <input 
-                                        type="range" 
-                                        min="1" 
-                                        max="50" 
-                                        value={brushSize} 
-                                        onChange={(e) => setBrushSize(parseInt(e.target.value))} 
+                                    <input
+                                        type="range"
+                                        min="1"
+                                        max="50"
+                                        value={brushSize}
+                                        onChange={(e) => setBrushSize(parseInt(e.target.value))}
                                     />
                                 </div>
-                                
+
                                 {/* Slider 2: Strength */}
                                 <div className="slider-item">
                                     <div className="slider-header">
                                         <span>Opacity/Strength</span>
                                         <strong>{brushStrength}x</strong>
                                     </div>
-                                    <input 
-                                        type="range" 
-                                        min="1" 
-                                        max="5" 
-                                        step="0.1" 
-                                        value={brushStrength} 
-                                        onChange={(e) => setBrushStrength(parseFloat(e.target.value))} 
+                                    <input
+                                        type="range"
+                                        min="1"
+                                        max="5"
+                                        step="0.1"
+                                        value={brushStrength}
+                                        onChange={(e) => setBrushStrength(parseFloat(e.target.value))}
                                     />
                                 </div>
 
+                                {/* Symmetry Toggle */}
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '10px', color: '#ccc', fontSize: '0.85rem' }}>
+                                    <input
+                                        type="checkbox"
+                                        checked={isSymmetric}
+                                        onChange={(e) => setIsSymmetric(e.target.checked)}
+                                        style={{ width: 'auto', margin: 0 }}
+                                    />
+                                    Draw Symmetric (validity)
+                                </label>
                             </div>
                         )}
                         <button className="danger-btn" onClick={resetMask}>Reset Mask</button>
@@ -486,7 +529,7 @@ function App() {
                     <div className="card control-group">
                         <h3>⚡ Preset Filters</h3>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            <button 
+                            <button
                                 className="preset-btn"
                                 onClick={() => applyLowPass(100)}
                                 title="Keep low frequencies (blur image)"
@@ -494,7 +537,7 @@ function App() {
                             >
                                 🔵 Low-Pass (Blur)
                             </button>
-                            <button 
+                            <button
                                 className="preset-btn"
                                 onClick={() => applyHighPass(50)}
                                 title="Keep high frequencies (edges)"
@@ -502,7 +545,7 @@ function App() {
                             >
                                 🔴 High-Pass (Edges)
                             </button>
-                            <button 
+                            <button
                                 className="preset-btn"
                                 onClick={() => applyBandPass(50, 150)}
                                 title="Keep middle frequencies"
@@ -510,7 +553,7 @@ function App() {
                             >
                                 🟡 Band-Pass
                             </button>
-                            <button 
+                            <button
                                 className="preset-btn"
                                 onClick={applyVerticalStripes}
                                 title="Remove horizontal lines"
@@ -518,7 +561,7 @@ function App() {
                             >
                                 ║ Remove V-Lines
                             </button>
-                            <button 
+                            <button
                                 className="preset-btn"
                                 onClick={applyHorizontalStripes}
                                 title="Remove vertical lines"
@@ -532,7 +575,7 @@ function App() {
 
                 {/* 2. MAIN WORKSPACE (Flex Column) */}
                 <div className="workspace">
-                    
+
                     {/* Top Row: The Images */}
                     <div className="image-stage">
                         <div className="panel">
@@ -545,22 +588,25 @@ function App() {
                         <div className="panel">
                             <h4>Spectrum <span className="highlight">(Interactive)</span></h4>
                             <div className="canvas-container">
-                                <canvas 
-                                    ref={spectrumRef} 
-                                    width={COMP_SIZE} 
+                                <canvas
+                                    ref={spectrumRef}
+                                    width={COMP_SIZE}
                                     height={COMP_SIZE}
                                     onMouseDown={handleCanvasInteraction}
                                     onMouseMove={handleCanvasInteraction}
                                     onMouseUp={handleCanvasInteraction}
                                     onMouseLeave={handleCanvasInteraction}
-                                    style={{ cursor: tool === 'point' ? 'crosshair' : 'none' }}
+                                    onTouchStart={handleCanvasInteraction}
+                                    onTouchMove={handleCanvasInteraction}
+                                    onTouchEnd={handleCanvasInteraction}
+                                    style={{ cursor: tool === 'point' ? 'crosshair' : 'none', touchAction: 'none' }}
                                 />
                             </div>
                             {/* Updated Stats Bar with Coordinates */}
-                            <div className="stats-bar" style={{display: 'flex', justifyContent: 'space-between', width: '100%', marginTop:'5px'}}>
-                                <small style={{color: '#4ec9b0'}}>
+                            <div className="stats-bar" style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginTop: '5px' }}>
+                                <small style={{ color: '#4ec9b0' }}>
                                     {hoverPos ? `Pos: (${hoverPos.x}, ${hoverPos.y})` : 'Pos: (-, -)'}
-                                    </small>
+                                </small>
                                 <small>Active: {stats.active}%</small>
                             </div>
                         </div>
@@ -589,19 +635,19 @@ function App() {
                                     </div>
                                     <div className="metric">
                                         <label>MAGNITUDE</label>
-                                        <span style={{color: '#4ec9b0'}}>{selectedPoint.mag.toFixed(1)}</span>
+                                        <span style={{ color: '#4ec9b0' }}>{selectedPoint.mag.toFixed(1)}</span>
                                     </div>
                                     <div className="metric">
                                         <label>PHASE (RAD)</label>
-                                        <span style={{color: '#ce9178'}}>{selectedPoint.phase.toFixed(3)}</span>
+                                        <span style={{ color: '#ce9178' }}>{selectedPoint.phase.toFixed(3)}</span>
                                     </div>
                                 </div>
-                                
+
                                 {/* Col 2: 2D */}
                                 <div className="dock-viz">
                                     <Wave2D selectedPoint={selectedPoint} size={160} />
                                 </div>
-                                
+
                                 {/* Col 3: 3D */}
                                 <div className="dock-viz">
                                     <Wave3D selectedPoint={selectedPoint} />
